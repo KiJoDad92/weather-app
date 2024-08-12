@@ -1,21 +1,41 @@
-import { Router, type Request, type Response } from 'express';
+import { Router, Request, Response } from 'express';
 const router = Router();
-import historyService  from '../../service/historyService';
+import historyService from '../../service/historyService';
 import weatherService from '../../service/weatherService';
 
-// TODO: POST Request with city name to retrieve weather data
-router.post('/', (req: Request, res: Response) => {
-  // TODO: GET weather data from city name
-  // TODO: save city to search history
+router.post('/', async (req: Request, res: Response) => {
+  const { city } = req.body;
+
+  try {
+    const weatherData = await weatherService.getWeatherData(city);
+
+    await historyService.saveCity(city);
+    res.json(weatherData);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error retrieving weather data' });
+  }
 });
 
-// TODO: GET search history
 router.get('/history', async (req: Request, res: Response) => {
-  history.getfeedback().then((data) => res.json(data));
+  const searchHistory = await historyService.getSearchHistory();
+  res.json(searchHistory);
 });
 
+router.delete('/history/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
 
-// * BONUS TODO: DELETE city from search history
-router.delete('/history/:id', async (req: Request, res: Response) => {});
+  try {
+
+    await historyService.deleteCity(id);
+
+    res.json({ message: 'City deleted from search history' });
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error deleting city from search history' });
+  }
+});
 
 export default router;
